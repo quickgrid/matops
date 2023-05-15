@@ -18,7 +18,7 @@ from sklearn.decomposition import TruncatedSVD
 
 class MatOpsBase:
     def __init__(self):
-        pass
+        return
 
     @classmethod
     def apply_noise(cls, *args, **kwargs):
@@ -96,7 +96,7 @@ class MTruncatedSVD(MatOpsBase):
     @classmethod
     def apply_noise(
             cls, img_gray: npt.NDArray, num_components: int = 16, extra_ops: str = None
-    ) -> [npt.NDArray, npt.NDArray]:
+    ) -> npt.NDArray:
         m1, m2 = cls.compress(img_gray, num_components=num_components)
         image_apply_noised = cls.decompress(m1, m2)
         return image_apply_noised
@@ -118,7 +118,7 @@ class MQRFactorization(MatOpsBase):
             cls,
             img_gray: npt.NDArray | PIL.Image.Image,
             num_components: int = 16,
-            is_pil_image=False,
+            is_pil_image: bool = False,
             extra_ops: str = None,
     ) -> [npt.NDArray, npt.NDArray]:
         if is_pil_image:
@@ -130,7 +130,7 @@ class MQRFactorization(MatOpsBase):
         if extra_ops is not None and num_components > 2:
             # matops_class = globals()["MTruncatedSVD"]
             matops_class = globals()[extra_ops]
-            q_m1, q_m2 = matops_class.compress(q, num_components=num_components)
+            q_m1, q_m2 = matops_class.compress(q, num_components=num_components // 2)
             q = np.dot(q_m1, q_m2)
 
         return q, r
@@ -142,7 +142,7 @@ class MQRFactorization(MatOpsBase):
     @classmethod
     def apply_noise(
             cls, img_gray: npt.NDArray, num_components: int = 16, extra_ops: str = None
-    ) -> [npt.NDArray, npt.NDArray]:
+    ) -> npt.NDArray:
         q, r = cls.compress(img_gray, num_components=num_components, extra_ops=extra_ops)
         image_apply_noised = cls.decompress(q, r)
         return image_apply_noised
@@ -152,8 +152,8 @@ if __name__ == '__main__':
     skimg = skimage.data.cat()
     gray_img = skimage.color.rgb2gray(skimg)
 
-    MTruncatedSVD.show_reconstruction(gray_img)
-    # MQRFactorization.show_reconstruction(gray_img, extra_ops="MTruncatedSVD")
+    # MTruncatedSVD.show_reconstruction(gray_img)
+    MQRFactorization.show_reconstruction(gray_img, extra_ops="MTruncatedSVD")
     # MQRFactorization.show_reconstruction(gray_img)
 
     # MQRFactorization.save_animation(
